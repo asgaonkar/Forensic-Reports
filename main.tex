@@ -4,6 +4,7 @@
 \usepackage{graphicx}
 \usepackage{blindtext}
 \usepackage{scrextend}
+\usepackage{hyperref}
 
 % Margins
 \topmargin=-0.5in
@@ -63,11 +64,20 @@ by\\[2\baselineskip]
 \setcounter{page}{1}
 \section{Introduction}
 
-\blindtext
+At this pace of digital advancement and rapid data generation, it is important to practice logging. Current scenario doesn't always satisfy logging in on secure machine. So in the event of log compromise, it should be impossible for the attacker to read, and almost impossible to modify without being detectable.\\
+
+Hence, there is a need for computationally cheap methods to able to build and maintain a file of secure audit log.
 
 \subsection{Problem Statement}
 
-\blindtext
+Given an untrusted\footnote{Although \textit{untrusted}, it isn't generally expected to be compromised} machine $\mu$ which is neither physically secure nor tamper resistant. \textit{\makePaperAuthors} try to develop a system to log on this machine with minimal interaction with a trusted machine $\tau$ while guaranteeing strongest security measures. In case an attacker gains control of machine $\mu$ at time \textit{t}, the attacker shouldn't be able to read, alter or delete logs made before time \textit{t} without being detected. Hence maintaining Confidentiality, Authenticity and Integrity of this system until time \textit{t}.\\
+
+In rare situations where owner of the device is not the same as the owner of secrets within the device, there is an urgent need to employ audit mechanism able to determine if there has been some attempted fraud. The purpose of this audit mechanism is to be able to detect any signs of manipulation, not to prevent all possible manipulation.\\
+
+Numerous applications are in need of such protocols. To give an analogy, consider an electronic wallet as the untrusted machine ($\mu$) containing its own set of instruction, code and data to work independently. Apart from its independent work, it also does communicate occasionally with its corresponding servers, which are assumed to be trusted ($\tau$). In an event of e-wallet being compromised, the servers should be notified of its compromise, so that no more traffic flows through the compromised device. Moreover the audit mechanism should be able to withstand tampering in-order to notify the servers. More applications are discussed in \hyperref[sec:application]{Section 2.3: Application}
+
+
+
 
 \subsection{Related Work}
 
@@ -86,6 +96,7 @@ by\\[2\baselineskip]
 \blindtext
 
 \subsection{Application}
+\label{sec:application}
 
 \blindtext
 
@@ -96,6 +107,17 @@ by\\[2\baselineskip]
 \subsubsection{As Utility Tool}
 
 \blindtext
+
+\subsubsection{Practical Examples}
+
+Other examples of this system benefiting from this protocol are discussed below:\\
+
+— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989], ACM Transactions on Information and System Security, Vol. 2, No. 2, May 1999}
+
+— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}
+
+— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}
+
 
 \subsection{Limitations}
 
