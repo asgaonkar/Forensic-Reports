@@ -78,12 +78,6 @@ In rare situations where owner of the device is not the same as the owner of sec
 Numerous applications are in need of such protocols. To give an analogy, consider an electronic wallet as the untrusted machine ($\mu$) containing its own set of instruction, code and data to work independently. Apart from its independent work, it also does communicate occasionally with its corresponding servers, which are assumed to be trusted ($\tau$). In an event of e-wallet being compromised, the servers should be notified of its compromise, so that no more traffic flows through the compromised device. Moreover the audit mechanism should be able to withstand tampering in-order to notify the servers. More applications are discussed in \hyperref[sec:application]{Section 2.3: Application}
 
 
-
-
-\subsection{Related Work}
-
-\blindtext
-
 \section{Novel Approach}
 
 \text{\makePaperAuthors} develop a computationally cheap method for making all log entries generated prior to the logging machine’s compromise impossible for the attacker to read, and also impossible to modify or destroy undetectably.
@@ -95,17 +89,17 @@ In order to understand the methodology proposed by \text{\makePaperAuthors}, it 
 \begin{enumerate}
     \item $ID_x$ represents a unique identifier string for an entity, $x$, within this application. 
     
-    \item $PKE_{PK_x} (K)$ is the public-key encryption, under $x$’s public key, of $K$, using an algorithm such as RSA [Rivest et al. 1978] or ElGamal [ElGamal 1985].
+    \item $PKE_{PK_x} (K)$ is the public-key encryption, under $x$’s public key, of $K$.\footnote{RSA or ElGamal}
 
-    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key, of Z, using an algorithm such as RSA or DSA [NIST 1994].
+    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key, of Z.\footnote{RSA or DSA}
 
-    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ under key $K_0$, using an algorithm such as DES [NBS 1977], IDEA [Lai et al. 1991], or Blowfish[Schneier 1994]. 
+    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ under key $K_0$.\footnote{DES, IDEA, or Blowfish}. 
 
-    \item $MAC_{K_0}(X)$ is the symmetric message authentication code (HMAC or NMAC [Bellare et al. 1996]), under key $K_0$, of $X$. 
+    \item $MAC_{K_0}(X)$ is the symmetric message authentication code under key $K_0$, of $X$. 
 
-    \item $hash(X)$ is the one-way hash, using an algorithm such as SHA-1 [NIST 1993] or RIPE-MD [Dobbertin et al. 1996], of $X$. 
+    \item $hash(X)$ is the one-way hash function.\footnote{SHA-256 or SHAKE-256}
 
-    \item $X, Y$ represents the concatenation of $X$ with $Y$. Also represented as $X || Y$ for easier interpretation.
+    \item $X, Y$ represents the concatenation of $X$ with $Y$. Also represented as $X || Y$
 
     \item $p$ represents nonce.
 \end{enumerate}
@@ -169,6 +163,7 @@ The process of log entry follows certain architecture. Every entries in logfile 
 \end{figure}
 
 \begin{enumerate}
+\label{sec:rules}
     \item $D_j$ represents the data to be logged in $j^{th}$ entry of $ID_{log}$. Data can be of any format, understandable and relevant to the user entering it. 
     
     \item $W_j$ is log entry type of the $j^{th}$ entry. It serves as a permissions mask for $\nu$. $\tau$ controls which log entry types, a particular $\nu$ will be allowed to access.
@@ -197,6 +192,79 @@ In the event where the attacker compromises $\mu$ before computing $A-j$, the $t
 
 \subsubsection{Startup: Creating the Logfile}
 
+As discussed in \hyperref[sec:rules]{Construction Rule (iii)}, $\mu$ should commit to $A_0$ in order to authenticate itself and to start a logfile. Either $A_0$ is communicated betwwen $\mu$ and $\tau$ initially before dispatch or as soon as the establish a communication channel.\\
+
+
+This transfer of $A_0$ between $\mu$ and $\tau$ should be done as securely as possible. In-order to protect the whole chain of logs, it is important to make sure, $A_0$ is not leaked.\footnote{Attack on $\mu$ before sharing $A_0$ renders the whole process useless. It is important to develop $\mu$ with pre-shared $A_0$.} $\mu$ should adhere to all the log construction rule, else $\tau$ might process it as signs of tampering. Even though $\mu$ cannot communicate $A_0$ to $\tau$ in real time, it is safe on $\tau's$ part to unhesitatingly assume that received $A_0$ is not tampered with, unless any sign of tampering is found.\\
+
+
+$\mu$ has knowledge of $\tau's$ public key and certificate of $\mu's$ public key from $\tau$. Using these two form of knowledge, $A_0$ can be passed through securely using the following procedure.
+
+\begin{enumerate}
+    \item $\mu$ forms the following components
+        \begin{itemize}
+            \item $K_0$, a random session key. 
+            \item $d$, a current timestamp. 
+            \item $d^+$, timestamp at which $\mu$ will time out. 
+            \item $ID_{log}$, a unique identifier for this logfile. 
+            \item $C_{\mu}$, $\mu's$ certificate from $\tau$. 
+            \item $A_0$, a random starting point. 
+            \item $X_0$ = $(p || d || C_{\mu} || A_0)$. 
+        \end{itemize}\\
+        $\mu$ forms $M_0$ from the above knowledge and sends it to $\tau$. $\mu$ also stores $hash(X_0)$ locally while waiting for the response.
+        
+        $M_0 = p||ID_{\mu}||PKE_{PK_{\tau}}(K_0)||E_{K_0}(X_0||SIGN_{SK_{\mu}}(X_0))$, where p is the nonce / protocol identifier
+        
+        
+    \item $\mu$ forms the first log entry $L_0$, with $W_0 = `LogfileInitializationType'$ and $D = (d||d^+||ID_{log}||M_0)$
+    
+    \item $\tau$ receives and verifies the initialization message. If it decrypts correctly into valid $\mu's$ signature, then $\tau$ forms 
+    $X_1 = (p||ID_{log}||hash(X_0))$. $\tau$ then generates a random session key, $K_1$, forms $M_1$ and sends it back to $\mu$. $M_1 = (p||ID_{\tau}||PKE_{PK_{\mu}}(K_1)|| E_{K_1}(X_1||SIGN_{SK_\tau}(X_1)))$.
+    
+    \item $\mu$ receives and verifies $M_1$. If verified, then $\mu$ forms a new log entry, $L_j$, with $W_j=`ResponseMessageType'$ and $D_j = M_1$. $\mu$ also calculates $A_1 = hash(A_0)$.
+    
+    If $\mu$ doesn’t receive $M_1$ by the time-out time $d_1$, or if $M_1$ is invalid, then $\mu$ forms a new log entry with $W_1 = `AbnormalCloseType'$ and $D_1 = (Curr. Timestamp || Reason for Closure)$. The log file is then closed. 
+\end{enumerate}
+
+It depends from one application to another if they can take risks of logging between the time frame of sending $M_0$ and receiving of $M_1$.Secure application may not take the risk of communicating within this window. It is in the best interest to log $M_1$ in either case. The purpose entering the unsuccessful abort log message is to indicate $\tau$, that there is no logfile currently in existence with the given $ID_{log}$.\\
+
+It might be a case where an attacker could delete $\mu’s$ whole logfile after compromise, and claim to simply have failed to receive $M_1$ during the startup.\footnote{Would have been susceptible to Replay Attack.}
+
+\subsubsection{Closing the Logfile}
+
+In order to close the logfile, it is important to follow certain procedure. Write the final-record message, $D_f$ (the entry code is $`NormalCloseMessage'$ and the data is a timestamp).
+
+Irretrievably delete $A_f$ and $K_f$. Once the file is properly closed, an attacker who has taken control of $\mu$ cannot make any alteration to the logfile without being detected. Neither can an attacker delete entries nor add others earlier in the log. Finally, the attacker cannot delete the whole log file, because of the earlier interaction between $\mu$ and $\tau$. Any of these changes will be detected when $\tau$ sees the final logfile.
+
+\subsubsection{Validating the Logfile}
+When $\tau$ receives the complete and closed log, $\tau$ can validate it using the hash chain and $Z_f$ (since it already knows $D_0$). Can also derive all the encryption keys used, and thus read the whole audit log.
+
+\subsubsection{Verification Entries}
+
+At times, a moderately trusted person or machine, called $\nu$, may need to verify or read some of the logfile’s records while they are still on $\mu$. This is made possible if $\tau$ has sent $M_1$ to $\mu$ and if $\nu$ has a suitable channel available to and from $\mu$. Note that this can occur before $\tau$ has received a copy of the log from $\mu$, and before $\mu$ has closed the logfile.\footnote{If $\nu$ is compromised, they will be able to read log files.}
+
+\begin{enumerate}
+    \item  $\nu$ receives a copy of the audit log, $L_0, L_1, L_2,...,L_f$, where $f$ is the index value of the last record, from $\mu$. Note that $\mu$ does not have to send $\nu$ a complete copy of the audit log, but it must send $\nu$ all entries from $L_0$ through some $L_f$, including the entry with $M_1$.
+    
+    \item $\nu$ goes through the hash chain in the log entries (the $Y_i$ values), verifying that each entry in the hash chain is correct.
+    
+    \item $\nu$ establishes a secure connection with $\tau$.
+
+    \item $\nu$ generates a list of all the log entries she wishes to read, from $0$ to $n$. This list contains a representation of the log entry type and index of each entry to which the verifier is requesting access. (Typically, only some log entry types will be allowed, in accordance with $\nu’s$ permission mask.) This list is called $Q[0..n]$, where $Q_i = (j||W_j)$.
+    
+    \item $\nu$ forms and sends to $\tau$: $M_2 = (p||ID_{log}||f||Y_f||Z_f||Q[0..n]$.
+    
+    \item $\tau$ verifies that the log has been properly created on $\mu$, and that $\nu$ is authorized to work with the log. $\tau$ knows $A_0$ so he can calculate $A_f$. This allows him to verify that $Z_f = MAC_{A_f}(Y_f)$. If there is a problem, $\tau$ sends the proper error code to $\nu$ and records that there is a problem with $ID_{log}$ on $\mu$ or a problem with $\nu$.
+
+    \item If there are no problems, $\tau$ forms a list, $R[1..n]$, of responses to the requests in $Q$. Each entry in $Q$ gets a corresponding entry in $R$: either giving the verifier the decryption key for that record, or else giving it an error code describing the reason for the refusal of access. (Typically, this will be because the log entry type isn’t allowed to be read by this verifier.) Note that $\tau$ computes these keys based on the log entry type codes given. If $\nu$ provides incorrect codes to $\tau$, the keys will be incorrect and $\nu$ will be unable to decrypt the log entries. Additionally, $\nu$ will not be able to derive the right key from the key he has been given.
+
+    \item $\tau$ forms and sends to $\nu$: $M_3 = (p|| R[0..n])$.
+    
+    \item $\nu$ is now able to decrypt and read, but not to change, the log entries whose keys were sent in $M_4$. $\nu$ is also convinced that the log entries are authentic, since a correct MAC on any hash-chain value is essentially a MAC on all previous entries as well.
+    
+    \item $\nu$ deletes the key it established with $\tau$ in Step (3). This guarantees that an attacker cannot read $\mu’s$ logfile if $\nu$ is compromised later. 
+
+\end{enumerate}
 
 
 
@@ -217,11 +285,11 @@ In the event where the attacker compromises $\mu$ before computing $A-j$, the $t
 
 Other examples of systems benefiting from this protocol are discussed below:\\
 
-— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989]}\\
+— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989]}
 
-— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}\\
+— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}
 
-— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}\\
+— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}
 
 — Mobile computing agents could benefit from the ability to resist alteration of their logs even when they’re running under the control of a malicious adversary.\footnote{[Riordan and Schneier 1998]}
 
