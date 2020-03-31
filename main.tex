@@ -105,7 +105,7 @@ In order to understand the methodology proposed by \text{\makePaperAuthors}, it 
 
     \item $hash(X)$ is the one-way hash, using an algorithm such as SHA-1 [NIST 1993] or RIPE-MD [Dobbertin et al. 1996], of $X$. 
 
-    \item $X, Y$ represents the concatenation of $X$ with $Y$. 
+    \item $X, Y$ represents the concatenation of $X$ with $Y$. Also represented as $X || Y$ for easier interpretation.
 
     \item $p$ represents nonce.
 \end{enumerate}
@@ -123,7 +123,8 @@ Understanding of different processes is incomplete without the knowledge of vari
 
 \subsection{Methodology}
 
-The working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle. 
+The working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle.\\
+
 
 The untrusted machine $\mu$ initially shares a secret key with trusted verification machine $\nu$. Using this secret key, a logfile is created. Four major aspects of security protecting the logfile is menioned below.
 
@@ -144,7 +145,7 @@ Assumption have be made in order to reflect reality and cope with various unknow
 
 - Occasional communication between untrusted machine $\mu$ and trusted machine $\tau$.
 
-- Unavailability of constant reliable high-bandwidth channel between untrusted machine $\mu$ and trusted machine $\tau$.
+- Unavailability of constant reliable high-bandwidth channel between $\mu$ and $\tau$.
 
 - Unavailability of a cryptography tool that can prevent deletion of files.
 
@@ -154,7 +155,7 @@ Assumption have be made in order to reflect reality and cope with various unknow
 
 - $\mu$ has both short-term and long-term storage available.
 
-- Existence of cryptogrphic tools to communicate securely between $\mu$ and $\tau$
+- Existence of cryptogrphic tools to communicate securely between $\mu$ and $\tau$.\footnote{Usage of SSL or TLS protocol.}
 
 \subsubsection{Construction Rules}
 
@@ -168,16 +169,36 @@ The process of log entry follows certain architecture. Every entries in logfile 
 \end{figure}
 
 \begin{enumerate}
-    \item $D_j$ represents the data to be logged in $j^{th}$ entry of. Data can be of any format, understandable and relevant to the user entering it. $ID_{log}$.
+    \item $D_j$ represents the data to be logged in $j^{th}$ entry of $ID_{log}$. Data can be of any format, understandable and relevant to the user entering it. 
     
-    \item $W_j$ is log entry type of the $j^{th}$ log entry. It serves as a permissions mask for $\nu$; $\tau$ controls which log entry types a particular $\nu$ will be allowed to access
+    \item $W_j$ is log entry type of the $j^{th}$ entry. It serves as a permissions mask for $\nu$. $\tau$ controls which log entry types, a particular $\nu$ will be allowed to access.
     
     \item  $A_j$ is the authentication key for the $j^{th}$ entry in the log. $\mu$ must generate a new $A_0$ before starting a logfile. Either this authentication key $A_0$ can be shared during startup or can be shared later between $\mu$ and $\tau$.
     
-    \item $K_j = hash(Encryption Key, W_j, A_j)$ This is the key used to encrypt the $j^{th}$ entry in the log. As discussed $W_j$ is used in the key derivation to prevent the partially trusted verifier, $\nu$, from getting decryption keys for log entry types to which the verifier is not permitted access.
+    \item $K_j = hash(W_j, A_j)$ This is the key used to encrypt the $j^{th}$ entry in the log. As discussed $W_j$ is used in the key derivation to prevent the partially trusted verifier $\nu$, from getting decryption keys for log entry types to which the verifier is not permitted access.
     
-    \item $Y_j = hash(Y_{j-1}, E_{K_j}(D_j), W_j)$ Hash chain maintained to allow partially trusted users, $\nu$, to verify parts of the log over a low-bandwidth connection with the trusted machine, $\tau$. $Y_j$ is based on $E_{K_j}(D_j)$ instead of $D_j$ so that the chain can be verified without knowing the log entry. At startup, $Y_0$ is defined as a $NULL$. 
+    \item $Y_j = hash(Y_{j-1}, E_{K_j}(D_j), W_j)$ Hash chain maintained to allow partially trusted users, $\nu$, to verify parts of the log over a low-bandwidth connection with the trusted machine, $\tau$. $Y_j$ is based on $E_{K_j}(D_j)$ instead of $D_j$ so that the chain can be verified without knowing the log entry. $Y_1$ is initialized to $NULL$. 
+    
+    \item $Z_j = MAC_{A_j}(Y_j)$
+    
+    \item $L_j = (W_j || E_{K_j}(D_j) || Y_j || Z_j)$ where $L_j$ is the $j^{th}$ log entry. 
+    
+    \item $A_{j+1} = hash(A_j)$
+    
 \end{enumerate}
+
+The values $A_j$ and $K_{j-1}$ are irretrievably destroyed as they are overwritten by the new values $A_{j+1}$ and $K_j$ as soon as they are computed.  \hyperref[fig:architecture]{Figure 1} illustrates the process of writing the $j^{th}$ entry into the log, given $A_{j-1}$, $Y_{j-1}$, and $D_j$.\\
+
+Given that an attacker gains control over $\mu$, at time $t$, $L_1, L_2, L_3, ....... L_t$ be the the log entries logged until time $t$ and current value of $A$ is $A_{j+1}$ what the attacker will have in hand. As $A_{j+1} = hash(A_j)$, uses hashing mechanism, it is computationally impossible\footnote{Breaking SHA-256, SHAKE-256 is computationally impossible} to retrieve $A_j$ from $A_{j+1}$. given these factors, the attacker cannot compute $A_{t-n}$ for any $0 \leq n \leq t$. Hence it isn't possible for the attacker to read, alter any previous entries without being detected. The logging machine would have also logged attacker's intrusion, but the attacker has no way of knowing if the intrusion has been detected or not. Only possibility for the attacker to harm $\mu$ is through deletion. Even then, the next communication between $\mu$ and $\tau$ will flag the damage done to the logfile.\\
+
+
+In the event where the attacker compromises $\mu$ before computing $A-j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is a normal log entry, it is not harmful to the system, but in case of $A_{j-1}$ being the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.\footnote{Drawback of infrequent log entries.}
+
+
+\subsubsection{Startup: Creating the Logfile}
+
+
+
 
 \subsection{Application}
 \label{sec:application}
