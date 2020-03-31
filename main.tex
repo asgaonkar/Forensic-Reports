@@ -6,6 +6,7 @@
 \usepackage{scrextend}
 \usepackage{hyperref}
 
+
 % Margins
 \topmargin=-0.5in
 \evensidemargin=0in
@@ -85,15 +86,98 @@ Numerous applications are in need of such protocols. To give an analogy, conside
 
 \section{Novel Approach}
 
-\blindtext
+\text{\makePaperAuthors} develop a computationally cheap method for making all log entries generated prior to the logging machine’s compromise impossible for the attacker to read, and also impossible to modify or destroy undetectably.
 
 \subsection{Terminologies}
 
-\blindtext
+In order to understand the methodology proposed by \text{\makePaperAuthors}, it is necessary to understand the terminologies used.
+\renewcommand{\labelenumi}{(\roman{enumi})}
+\begin{enumerate}
+    \item $ID_x$ represents a unique identifier string for an entity, $x$, within this application. 
+    
+    \item $PKE_{PK_x} (K)$ is the public-key encryption, under $x$’s public key, of $K$, using an algorithm such as RSA [Rivest et al. 1978] or ElGamal [ElGamal 1985].
+
+    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key, of Z, using an algorithm such as RSA or DSA [NIST 1994].
+
+    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ under key $K_0$, using an algorithm such as DES [NBS 1977], IDEA [Lai et al. 1991], or Blowfish[Schneier 1994]. 
+
+    \item $MAC_{K_0}(X)$ is the symmetric message authentication code (HMAC or NMAC [Bellare et al. 1996]), under key $K_0$, of $X$. 
+
+    \item $hash(X)$ is the one-way hash, using an algorithm such as SHA-1 [NIST 1993] or RIPE-MD [Dobbertin et al. 1996], of $X$. 
+
+    \item $X, Y$ represents the concatenation of $X$ with $Y$. 
+
+    \item $p$ represents nonce.
+\end{enumerate}
+
+Understanding of different processes is incomplete without the knowledge of various parties involved in the system. Below mentioned are three different parties within the system:
+
+\begin{itemize}
+    \item $\tau$ is the trusted machine. It may typically be thought of as a server in a secure location. Example: Bank Servers, Government Servers
+    
+    \item $\mu$ is the untrusted machine, on which the log is to be kept.
+    
+    \item $\nu$ is a moderately trusted verifier, which will be trusted to review certain kinds of records on a log, but not trusted with the ability to change records. Note that $\nu$ must interact with $\tau$ in order to access these records. 
+\end{itemize}
+
 
 \subsection{Methodology}
 
-\blindtext
+The working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle. 
+
+The untrusted machine $\mu$ initially shares a secret key with trusted verification machine $\nu$. Using this secret key, a logfile is created. Four major aspects of security protecting the logfile is menioned below.
+
+\begin{itemize}
+    \item \textbf{Short-term Hashing}: As soon as the log is written, the log authentication key is hashed. The old version of authentication key is overwritten by the new hashed value of authentication key. Hence irretrievably deletes the previous value.
+    
+    \item \textbf{Encryption}: As the encryption keys are derived from hashed value, it is possible to give encryption for individual logs to partially trusted users. Any altercation by those users can be easily detectable.
+    
+    \item \textbf{Single Valued Verification}: Every log entry contains an element in a hash chain that serves to authenticate the values of all previous log entries. Similar to Block-chain. Using this single hash values, it is possible to validate the whole log file.
+    
+    \item \textbf{Permission Mask}: Permission masks acts as access right given to partially trusted users. Every log entry has its own permission mask. Different partially trusted users can be given access to different kinds of entries. As the encryption keys are partly derived from log entry type, lying about the access rights to gain access to restricted log makes it almost impossible for the partially trusted user to get the right access key.
+    
+\end{itemize}
+
+\subsubsection{Assumption}
+
+Assumption have be made in order to reflect reality and cope with various unknown factors. Below mentioned are few assumptions made that are important for functioning and relevance of this system.\\
+
+- Occasional communication between untrusted machine $\mu$ and trusted machine $\tau$.
+
+- Unavailability of constant reliable high-bandwidth channel between untrusted machine $\mu$ and trusted machine $\tau$.
+
+- Unavailability of a cryptography tool that can prevent deletion of files.
+
+- The attacker cannot compromise machine $\tau$.
+
+- Once $\mu$ is compromised, it eventually manages to communicate with $\tau$.
+
+- $\mu$ has both short-term and long-term storage available.
+
+- Existence of cryptogrphic tools to communicate securely between $\mu$ and $\tau$
+
+\subsubsection{Construction Rules}
+
+The process of log entry follows certain architecture. Every entries in logfile makes use of fixed format and are constructed using following procedure:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=10cm]{architecture.png}
+    \caption{Process Architecture}
+    \label{fig:architecture}
+\end{figure}
+
+\begin{enumerate}
+    \item $D_j$ represents the data to be logged in $j^{th}$ entry of. Data can be of any format, understandable and relevant to the user entering it. $ID_{log}$.
+    
+    \item $W_j$ is log entry type of the $j^{th}$ log entry. It serves as a permissions mask for $\nu$; $\tau$ controls which log entry types a particular $\nu$ will be allowed to access
+    
+    \item  $A_j$ is the authentication key for the $j^{th}$ entry in the log. $\mu$ must generate a new $A_0$ before starting a logfile. Either this authentication key $A_0$ can be shared during startup or can be shared later between $\mu$ and $\tau$.
+    
+    \item $K_j = hash(Encryption Key, W_j, A_j)$ This is the key used to encrypt the $j^{th}$ entry in the log. As discussed $W_j$ is used in the key derivation to prevent the partially trusted verifier, $\nu$, from getting decryption keys for log entry types to which the verifier is not permitted access.
+    
+    \item $Y_j = hash(Y_{j-1}, E_{K_j}(D_j), W_j)$ Hash chain maintained to allow partially trusted users, $\nu$, to verify parts of the log over a low-bandwidth connection with the trusted machine, $\tau$. $Y_j$ is based on $E_{K_j}(D_j)$ instead of $D_j$ so that the chain can be verified without knowing the log entry. At startup, $Y_0$ is defined as a $NULL$. 
+\end{enumerate}
 
 \subsection{Application}
 \label{sec:application}
@@ -110,18 +194,24 @@ Numerous applications are in need of such protocols. To give an analogy, conside
 
 \subsubsection{Practical Examples}
 
-Other examples of this system benefiting from this protocol are discussed below:\\
+Other examples of systems benefiting from this protocol are discussed below:\\
 
-— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989], ACM Transactions on Information and System Security, Vol. 2, No. 2, May 1999}
+— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989]}\\
 
-— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}
+— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}\\
 
-— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}
+— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}\\
+
+— Mobile computing agents could benefit from the ability to resist alteration of their logs even when they’re running under the control of a malicious adversary.\footnote{[Riordan and Schneier 1998]}
 
 
 \subsection{Limitations}
 
-\blindtext
+Every solution has its limitations either by the nature of its design or implementation. As perfectly said by the author \textit{``no security measure can protect the audit log entries written after an attacker has gained control of $\mu$"}, trying to control this device after compromise is futile, except the fact that the machine logged the event of compromise. Once compromised, the attacker can log on machine $\mu$ as needed. All that is possible is to stop the attacker from accessing logs before the event of compromise. Mechanisms are in place to know if there has been any attempt at tampering with logs logged before time \textit{t}.\\
+
+Entire mechanism is based on the assumption that the attacker cannot compromise machine $\tau$. Was there a case of constant reliable high-bandwidth available, it would have been easy for the untrusted machine $\mu$ to write logs, encrypt and send it to $\tau$. Moreover, there is no cryptography tool that can prevent log deletion. Only possible measure is the ability to detect that the files have been deleted.\\
+
+Understanding of machine $\mu$ is important for smooth functioning of this protocol. The amount of time $\mu$ is online and frequency of $\mu$ expected to be compromised should be known. For example, if $\mu$ is expected to be compromised every hour, it is necessary to make sure that $\mu$ communicates with $\tau$ twice or thrice within an hour. In order to know if its possible to communicate with $\tau$ we shall be abreast of the time $\mu$ is online.
 
 \section{Critique}
 
