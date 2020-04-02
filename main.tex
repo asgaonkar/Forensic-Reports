@@ -65,13 +65,11 @@ by\\[2\baselineskip]
 \setcounter{page}{1}
 \section{Introduction}
 
-At this pace of digital advancement and rapid data generation, it is important to practice logging. Current scenario doesn't always satisfy logging in on secure machine. So in the event of log compromise, it should be impossible for the attacker to read, and almost impossible to modify without being detectable.\\
-
-Hence, there is a need for computationally cheap methods to able to build and maintain a file of secure audit log.
+At this pace of digital advancement and rapid data generation, it is important to practice logging. Current scenario doesn't always satisfy logging in on secure machine. So in the event of log compromise, it should be impossible for the attacker to read, and almost impossible to modify without being detectable.Hence, there is a need for computationally cheap methods to able to build and maintain a file of secure audit log.
 
 \subsection{Problem Statement}
 
-Given an untrusted\footnote{Although \textit{untrusted}, it isn't generally expected to be compromised} machine $\mu$ which is neither physically secure nor tamper resistant. \textit{\makePaperAuthors} try to develop a system to log on this machine with minimal interaction with a trusted machine $\tau$ while guaranteeing strongest security measures. In case an attacker gains control of machine $\mu$ at time \textit{t}, the attacker shouldn't be able to read, alter or delete logs made before time \textit{t} without being detected. Hence maintaining Confidentiality, Authenticity and Integrity of this system until time \textit{t}.\\
+Given an untrusted\footnote{Although \textit{untrusted}, it isn't generally expected to be compromised} machine $\mu$ which is neither physically secure nor tamper resistant. \textit{\makePaperAuthors} develop a system to log on $\mu$ with minimal interaction with a trusted machine $\tau$ while guaranteeing strongest security measures. In case an attacker gains control of machine $\mu$ at time \textit{t}, the attacker shouldn't be able to read, alter or delete logs made before time \textit{t} without being detected. Hence maintaining Confidentiality, Integrity and Availability (explained in \hyperref[sec:limitation]{Section 3.3: Limitations}) of this system until time \textit{t}.\\
 
 In rare situations where owner of the device is not the same as the owner of secrets within the device, there is an urgent need to employ audit mechanism able to determine if there has been some attempted fraud. The purpose of this audit mechanism is to be able to detect any signs of manipulation, not to prevent all possible manipulation.\\
 
@@ -80,22 +78,22 @@ Numerous applications are in need of such protocols. To give an analogy, conside
 
 \section{Novel Approach}
 
-\text{\makePaperAuthors} develop a computationally cheap method for making all log entries generated prior to the logging machine’s compromise impossible for the attacker to read, and also impossible to modify or destroy undetectably.
+\textit{\makePaperAuthors} develop a computationally cheap method for making all log entries generated prior to the logging machine’s compromise impossible for the attacker to read, modify or destroy undetectably.
 
 \subsection{Terminologies}
 
-In order to understand the methodology proposed by \text{\makePaperAuthors}, it is necessary to understand the terminologies used.
+In order to understand the methodology proposed by \textit{\makePaperAuthors}, it is necessary to understand the terminologies used.
 \renewcommand{\labelenumi}{(\roman{enumi})}
 \begin{enumerate}
-    \item $ID_x$ represents a unique identifier string for an entity, $x$, within this application. 
+    \item $ID_x$ represents a unique identifier string for an entity, $x$. 
     
-    \item $PKE_{PK_x} (K)$ is the public-key encryption, under $x$’s public key, of $K$.\footnote{RSA or ElGamal}
+    \item $PKE_{PK_x} (K)$ is the public-key encryption, using $x$’s public key.\footnote{RSA or ElGamal}
 
-    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key, of Z.\footnote{RSA or DSA}
+    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key.\footnote{RSA or DSA}
 
-    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ under key $K_0$.\footnote{DES, IDEA, or Blowfish}. 
+    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ using key $K_0$.\footnote{DES, IDEA, or Blowfish}. 
 
-    \item $MAC_{K_0}(X)$ is the symmetric message authentication code under key $K_0$, of $X$. 
+    \item $MAC_{K_0}(X)$ is the symmetric message authentication code using key $K_0$. 
 
     \item $hash(X)$ is the one-way hash function.\footnote{SHA-256 or SHAKE-256}
 
@@ -120,7 +118,7 @@ Understanding of different processes is incomplete without the knowledge of vari
 The working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle.\\
 
 
-The untrusted machine $\mu$ initially shares a secret key with trusted verification machine $\nu$. Using this secret key, a logfile is created. Four major aspects of security protecting the logfile is menioned below.
+The untrusted machine $\mu$ initially shares a secret key with trusted verification machine $\tau$. Using this secret key, a logfile is created. Four major aspects of security protecting the logfile is mentioned below.
 
 \begin{itemize}
     \item \textbf{Short-term Hashing}: As soon as the log is written, the log authentication key is hashed. The old version of authentication key is overwritten by the new hashed value of authentication key. Hence irretrievably deletes the previous value.
@@ -137,15 +135,13 @@ The untrusted machine $\mu$ initially shares a secret key with trusted verificat
 
 Assumption have be made in order to reflect reality and cope with various unknown factors. Below mentioned are few assumptions made that are important for functioning and relevance of this system.\\
 
-- Occasional communication between untrusted machine $\mu$ and trusted machine $\tau$.
+- Untrusted machine $\mu$ occasionally communicates with trusted machine $\tau$.
 
 - Unavailability of constant reliable high-bandwidth channel between $\mu$ and $\tau$.
 
-- Unavailability of a cryptography tool that can prevent deletion of files.
-
 - The attacker cannot compromise machine $\tau$.
 
-- Once $\mu$ is compromised, it eventually manages to communicate with $\tau$.
+- After $\mu$ is compromised, it eventually manages to communicate with $\tau$.
 
 - $\mu$ has both short-term and long-term storage available.
 
@@ -187,12 +183,12 @@ The values $A_j$ and $K_{j-1}$ are irretrievably destroyed as they are overwritt
 Given that an attacker gains control over $\mu$, at time $t$, $L_1, L_2, L_3, ....... L_t$ be the the log entries logged until time $t$ and current value of $A$ is $A_{j+1}$ what the attacker will have in hand. As $A_{j+1} = hash(A_j)$, uses hashing mechanism, it is computationally impossible\footnote{Breaking SHA-256, SHAKE-256 is computationally impossible} to retrieve $A_j$ from $A_{j+1}$. given these factors, the attacker cannot compute $A_{t-n}$ for any $0 \leq n \leq t$. Hence it isn't possible for the attacker to read, alter any previous entries without being detected. The logging machine would have also logged attacker's intrusion, but the attacker has no way of knowing if the intrusion has been detected or not. Only possibility for the attacker to harm $\mu$ is through deletion. Even then, the next communication between $\mu$ and $\tau$ will flag the damage done to the logfile.\\
 
 
-In the event where the attacker compromises $\mu$ before computing $A-j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is a normal log entry, it is not harmful to the system, but in case of $A_{j-1}$ being the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.\footnote{Drawback of infrequent log entries.}
+In the event where the attacker compromises $\mu$ before computing $A_j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is a normal log entry, it is not harmful to the system, but in case of $A_{j-1}$ being the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.\footnote{Drawback of infrequent log entries.}
 
 
 \subsubsection{Startup: Creating the Logfile}
 
-As discussed in \hyperref[sec:rules]{Construction Rule (iii)}, $\mu$ should commit to $A_0$ in order to authenticate itself and to start a logfile. Either $A_0$ is communicated betwwen $\mu$ and $\tau$ initially before dispatch or as soon as the establish a communication channel.\\
+As discussed in \hyperref[sec:rules]{Construction Rule (iii)}, $\mu$ should commit to $A_0$ in order to authenticate itself and to start a logfile. Either $A_0$ is communicated betwwen $\mu$ and $\tau$ initially before dispatch or as soon as they establish a communication channel.\\
 
 
 This transfer of $A_0$ between $\mu$ and $\tau$ should be done as securely as possible. In-order to protect the whole chain of logs, it is important to make sure, $A_0$ is not leaked.\footnote{Attack on $\mu$ before sharing $A_0$ renders the whole process useless. It is important to develop $\mu$ with pre-shared $A_0$.} $\mu$ should adhere to all the log construction rule, else $\tau$ might process it as signs of tampering. Even though $\mu$ cannot communicate $A_0$ to $\tau$ in real time, it is safe on $\tau's$ part to unhesitatingly assume that received $A_0$ is not tampered with, unless any sign of tampering is found.\\
@@ -210,7 +206,8 @@ $\mu$ has knowledge of $\tau's$ public key and certificate of $\mu's$ public key
             \item $C_{\mu}$, $\mu's$ certificate from $\tau$. 
             \item $A_0$, a random starting point. 
             \item $X_0$ = $(p || d || C_{\mu} || A_0)$. 
-        \end{itemize}\\
+        \end{itemize}
+        
         $\mu$ forms $M_0$ from the above knowledge and sends it to $\tau$. $\mu$ also stores $hash(X_0)$ locally while waiting for the response.
         
         $M_0 = p||ID_{\mu}||PKE_{PK_{\tau}}(K_0)||E_{K_0}(X_0||SIGN_{SK_{\mu}}(X_0))$, where p is the nonce / protocol identifier
@@ -226,13 +223,13 @@ $\mu$ has knowledge of $\tau's$ public key and certificate of $\mu's$ public key
     If $\mu$ doesn’t receive $M_1$ by the time-out time $d_1$, or if $M_1$ is invalid, then $\mu$ forms a new log entry with $W_1 = `AbnormalCloseType'$ and $D_1 = (Curr. Timestamp || Reason for Closure)$. The log file is then closed. 
 \end{enumerate}
 
-It depends from one application to another if they can take risks of logging between the time frame of sending $M_0$ and receiving of $M_1$.Secure application may not take the risk of communicating within this window. It is in the best interest to log $M_1$ in either case. The purpose entering the unsuccessful abort log message is to indicate $\tau$, that there is no logfile currently in existence with the given $ID_{log}$.\\
+It depends from one application to another if they can take risks of logging between the time frame of sending $M_0$ and receiving of $M_1$.Secure application may not take the risk of communicating within this window. It is in the best interest to log $M_1$ in either case. The purpose of entering unsuccessful abort log message is to indicate $\tau$, that there is no logfile currently in existence with the given $ID_{log}$.\\
 
 It might be a case where an attacker could delete $\mu’s$ whole logfile after compromise, and claim to simply have failed to receive $M_1$ during the startup.\footnote{Would have been susceptible to Replay Attack.}
 
 \subsubsection{Closing the Logfile}
 
-In order to close the logfile, it is important to follow certain procedure. Write the final-record message, $D_f$ (the entry code is $`NormalCloseMessage'$ and the data is a timestamp).
+In order to close the logfile, it is important to follow certain procedure. Write the final-record message, $D_f$ (the entry code as $`NormalCloseMessage'$ and data as timestamp).\\
 
 Irretrievably delete $A_f$ and $K_f$. Once the file is properly closed, an attacker who has taken control of $\mu$ cannot make any alteration to the logfile without being detected. Neither can an attacker delete entries nor add others earlier in the log. Finally, the attacker cannot delete the whole log file, because of the earlier interaction between $\mu$ and $\tau$. Any of these changes will be detected when $\tau$ sees the final logfile.
 
@@ -248,7 +245,7 @@ At times, a moderately trusted person or machine, called $\nu$, may need to veri
     
     \item $\nu$ goes through the hash chain in the log entries (the $Y_i$ values), verifying that each entry in the hash chain is correct.
     
-    \item $\nu$ establishes a secure connection with $\tau$.
+    \item $\nu$ establishes a secure connection with $\tau$\footnote{Insecure connection renders the whole process useless}.
 
     \item $\nu$ generates a list of all the log entries she wishes to read, from $0$ to $n$. This list contains a representation of the log entry type and index of each entry to which the verifier is requesting access. (Typically, only some log entry types will be allowed, in accordance with $\nu’s$ permission mask.) This list is called $Q[0..n]$, where $Q_i = (j||W_j)$.
     
@@ -268,53 +265,93 @@ At times, a moderately trusted person or machine, called $\nu$, may need to veri
 
 
 
-\subsection{Application}
+\subsection{Application and Extensions}
 \label{sec:application}
 
-\blindtext
+There is an immense possibility for further extending on this protocol. It also provides huge array of application.
 
-\subsubsection{As Forensic Tool}
+\subsubsection{Usage}
 
-\blindtext
+Secure audit log can be used a an utility tool for various scenarios. Extending this tool to solve various problems encountered makes it a good utility tool.
 
-\subsubsection{As Utility Tool}
-
-\blindtext
+\begin{itemize}
+    \item \textbf{Forensic Tool} - Any signs of tampering and intrusion is detected by this audit log and hence can act as forensic tool. Assuming that there is a software that reads the log and does log analysis, there is a possibility that usage of secure audit logs would prove to be invaluable to forensic analysis.
+\end{itemize}
 
 \subsubsection{Practical Examples}
 
 Other examples of systems benefiting from this protocol are discussed below:\\
 
-— A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989]}
+\begin{itemize}
+    \item A computer that logs various kinds of network activity needs to have log entries of an attack undeletable and unalterable, even in the event that an attacker takes over the logging machine over the network.\footnote{[Stoll 1989]}
+    
+    \item An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}
 
-— An intrusion-detection system that logs the entry and exit of people into a secured area needs to resist attempts to delete or alter logs, even after the machine on which the logging takes place has been taken over by an attacker.\footnote{[Schneier and Kelsey 1999]}
+    \item A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}
 
-— A computer under the control of a marginally trusted person or entity needs to keep logs that can’t be changed after the fact, despite the intention of the person in control of the machine to “rewrite history” in some way. This also comes up when a secure coprocessor, or “dongle,” is attached to an untrusted computer.\footnote{[Kelsey and Schneier 1996; Schneier and Kelsey 1997b]}
+    \item Mobile computing agents could benefit from the ability to resist alteration of their logs even when they’re running under the control of a malicious adversary.\footnote{[Riordan and Schneier 1998]}
+\end{itemize}
 
-— Mobile computing agents could benefit from the ability to resist alteration of their logs even when they’re running under the control of a malicious adversary.\footnote{[Riordan and Schneier 1998]}
 
+\section{Critique}
+
+The idea of coming up with such a protocol / system to counter numerous existing needs. Cryptographic tool is utilized to its maximum capabilities. Although being original and state of art, it does have its strength and weaknesses.\\
+
+Looking from the perspective of the authors \textit{\makePaperAuthors} during 1999, the usage of various legacy algorithms were justified. For example: SHA-1 in 1999 was computationally impossible to break.
+
+\subsection{Strengths and Weaknesses}
+
+Below list describes the strengths and weaknesses of this system.
+
+\subsubsection{Strengths}
+
+\begin{itemize}
+    \item Usage of \textbf{Short-term Hashing}: Perfect forward secrecy.
+    
+    \item Confidentiality, Non-Repudiation is provided by \textbf{Encryption} and usage of \textbf{Certificates}.
+    
+    \item \textbf{Single Valued Verification} makes it lightweight and hence works faster making side-channel attacks a little harder.
+    
+    \item \textbf{Permission Masks} makes it almost impossible to read logs by disguising as someone else.
+\end{itemize}
+
+
+\subsubsection{Weaknesses}
+
+\begin{itemize}
+    \item Weakness: Assumption - (After $\mu$ is compromised, it eventually manages to communicate with $\tau$.)
+    
+    \item Weakness: Single point of contact: $A_0$. Medium based tool.
+    
+    \item Weakness: In the event where the attacker compromises $\mu$ before computing $A_j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is a normal log entry, it is not harmful to the system, but in case of $A_{j-1}$ being the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.
+    
+    \item Attack on $\mu$ before sharing $A_0$ renders the whole process useless. It is important to develop $\mu$ with pre-shared $A_0$.
+\end{itemize}
+
+\subsection{Further Improvements and Expectation}
+
+Due to it's broad range of application, there is numerous opportunity for further improvements. Below mentioned list exhibits possible extension on current protocol.
+
+\begin{itemize}
+    \item \textbf{Controlling Abnormal Shutdowns} - changes can be introduced in-order to take care of log file being truncated during abnormal shutdown. Storing a message of abnormal shutdown in non-volatile method every time a new $A_j$ is computed and irretrievably deleted once the log is entered. This might help $\tau$ and $\mu$ understand the abnormal events.
+    
+    \item \textbf{Voice Line Initialization} - Usage of DTMF tones to reduce the complexity of creating the logfile. Authenticating $\mu$ and format of $M_0$ through DTMF tones might increase initiation process 
+    
+    \item \textbf{Peer-to-Peer} - Replacing $\tau$ with peer-to-peer model. Usage of this technique can be compared to emergence of block-chain technology.
+\end{itemize}
 
 \subsection{Limitations}
+\label{sec:limitation}
 
 Every solution has its limitations either by the nature of its design or implementation. As perfectly said by the author \textit{``no security measure can protect the audit log entries written after an attacker has gained control of $\mu$"}, trying to control this device after compromise is futile, except the fact that the machine logged the event of compromise. Once compromised, the attacker can log on machine $\mu$ as needed. All that is possible is to stop the attacker from accessing logs before the event of compromise. Mechanisms are in place to know if there has been any attempt at tampering with logs logged before time \textit{t}.\\
 
 Entire mechanism is based on the assumption that the attacker cannot compromise machine $\tau$. Was there a case of constant reliable high-bandwidth available, it would have been easy for the untrusted machine $\mu$ to write logs, encrypt and send it to $\tau$. Moreover, there is no cryptography tool that can prevent log deletion. Only possible measure is the ability to detect that the files have been deleted.\\
 
-Understanding of machine $\mu$ is important for smooth functioning of this protocol. The amount of time $\mu$ is online and frequency of $\mu$ expected to be compromised should be known. For example, if $\mu$ is expected to be compromised every hour, it is necessary to make sure that $\mu$ communicates with $\tau$ twice or thrice within an hour. In order to know if its possible to communicate with $\tau$ we shall be abreast of the time $\mu$ is online.
-
-\section{Critique}
-
-\blindtext
-
-\subsection{Strengths and Weaknesses}
-
-\blindtext
-
-\subsection{Further Improvements}
-
-\blindtext
-
-\subsubsection{Expectation}
+Understanding of machine $\mu$ is important for smooth functioning of this protocol. The amount of time $\mu$ is online and frequency of $\mu$ expected to be compromised should be known, indicating availability of this protocol. For example, if $\mu$ is expected to be compromised every hour, it is necessary to make sure that $\mu$ communicates with $\tau$ atleast twice or thrice within an hour. In order to know if its possible to communicate with $\tau$ we shall be abreast of the time $\mu$ is online.
 %--/Paper--
+
+\subsection{Conclusion}
+
+Although cryptographic tools prevent fraud to some extent, the main aim of using these tools are to detect fraudulent activities. It acts as an indirect piece of evidence to corroborate the detected fraud. An unalterable logging system would make the work of attackers much harder. This scheme, combined with physical tamper-resistance and periodic inspection of the insecure machines, could form the basis for highly trusted auditing capabilities. 
 
 \end{document}
