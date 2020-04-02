@@ -91,7 +91,7 @@ In order to understand the methodology proposed by \textit{\makePaperAuthors}, i
 
     \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key.\footnote{RSA or DSA}
 
-    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ using key $K_0$.\footnote{DES, IDEA, or Blowfish}. 
+    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ using key $K_0$.\footnote{AES, DES, IDEA, or Blowfish}. 
 
     \item $MAC_{K_0}(X)$ is the symmetric message authentication code using key $K_0$. 
 
@@ -225,11 +225,11 @@ $\mu$ has knowledge of $\tau's$ public key and certificate of $\mu's$ public key
 
 It depends from one application to another if they can take risks of logging between the time frame of sending $M_0$ and receiving of $M_1$.Secure application may not take the risk of communicating within this window. It is in the best interest to log $M_1$ in either case. The purpose of entering unsuccessful abort log message is to indicate $\tau$, that there is no logfile currently in existence with the given $ID_{log}$.\\
 
-It might be a case where an attacker could delete $\mu’s$ whole logfile after compromise, and claim to simply have failed to receive $M_1$ during the startup.\footnote{Would have been susceptible to Replay Attack.}
+It might be a case where an attacker could delete $\mu$'s whole logfile after compromise, and claim to simply have failed to receive $M_1$ during the startup.
 
 \subsubsection{Closing the Logfile}
 
-In order to close the logfile, it is important to follow certain procedure. Write the final-record message, $D_f$ (the entry code as $`NormalCloseMessage'$ and data as timestamp).\\
+In order to close the logfile, it is important to follow certain procedure. Write the final-record message, $D_f$ (the entry code as `$NormalCloseMessage$' and data as timestamp).\\
 
 Irretrievably delete $A_f$ and $K_f$. Once the file is properly closed, an attacker who has taken control of $\mu$ cannot make any alteration to the logfile without being detected. Neither can an attacker delete entries nor add others earlier in the log. Finally, the attacker cannot delete the whole log file, because of the earlier interaction between $\mu$ and $\tau$. Any of these changes will be detected when $\tau$ sees the final logfile.
 
@@ -238,7 +238,7 @@ When $\tau$ receives the complete and closed log, $\tau$ can validate it using t
 
 \subsubsection{Verification Entries}
 
-At times, a moderately trusted person or machine, called $\nu$, may need to verify or read some of the logfile’s records while they are still on $\mu$. This is made possible if $\tau$ has sent $M_1$ to $\mu$ and if $\nu$ has a suitable channel available to and from $\mu$. Note that this can occur before $\tau$ has received a copy of the log from $\mu$, and before $\mu$ has closed the logfile.\footnote{If $\nu$ is compromised, they will be able to read log files.}
+At times, a moderately trusted person or machine, called $\nu$, may need to verify or read some of the logfile’s records while they are still on $\mu$. This is made possible if $\tau$ has sent $M_1$ to $\mu$ and if $\nu$ has a suitable channel available to and from $\mu$. Note that this can occur before $\tau$ has received a copy of the log from $\mu$, and before $\mu$ has closed the logfile.
 
 \begin{enumerate}
     \item  $\nu$ receives a copy of the audit log, $L_0, L_1, L_2,...,L_f$, where $f$ is the index value of the last record, from $\mu$. Note that $\mu$ does not have to send $\nu$ a complete copy of the audit log, but it must send $\nu$ all entries from $L_0$ through some $L_f$, including the entry with $M_1$.
@@ -247,7 +247,7 @@ At times, a moderately trusted person or machine, called $\nu$, may need to veri
     
     \item $\nu$ establishes a secure connection with $\tau$\footnote{Insecure connection renders the whole process useless}.
 
-    \item $\nu$ generates a list of all the log entries she wishes to read, from $0$ to $n$. This list contains a representation of the log entry type and index of each entry to which the verifier is requesting access. (Typically, only some log entry types will be allowed, in accordance with $\nu’s$ permission mask.) This list is called $Q[0..n]$, where $Q_i = (j||W_j)$.
+    \item $\nu$ generates a list of all the log entries she wishes to read, from $0$ to $n$. This list contains a representation of the log entry type and index of each entry to which the verifier is requesting access. (Typically, only some log entry types will be allowed, in accordance with $\nu$'s permission mask.) This list is called $Q[0..n]$, where $Q_i = (j||W_j)$.
     
     \item $\nu$ forms and sends to $\tau$: $M_2 = (p||ID_{log}||f||Y_f||Z_f||Q[0..n]$.
     
@@ -259,7 +259,7 @@ At times, a moderately trusted person or machine, called $\nu$, may need to veri
     
     \item $\nu$ is now able to decrypt and read, but not to change, the log entries whose keys were sent in $M_4$. $\nu$ is also convinced that the log entries are authentic, since a correct MAC on any hash-chain value is essentially a MAC on all previous entries as well.
     
-    \item $\nu$ deletes the key it established with $\tau$ in Step (3). This guarantees that an attacker cannot read $\mu’s$ logfile if $\nu$ is compromised later. 
+    \item $\nu$ deletes the key it established with $\tau$ in Step (3). This guarantees that an attacker cannot read $\mu$'s logfile if $\nu$ is compromised later. 
 
 \end{enumerate}
 
@@ -306,26 +306,35 @@ Below list describes the strengths and weaknesses of this system.
 \subsubsection{Strengths}
 
 \begin{itemize}
-    \item Usage of \textbf{Short-term Hashing}: Perfect forward secrecy.
+    \item Usage of Short-term Hashing technique to overwrite old authentication keys with new authentication keys paves way to achieve Perfect forward secrecy. It states that session keys will not be compromised eve if private key of the recipient is compromised. 
     
-    \item Confidentiality, Non-Repudiation is provided by \textbf{Encryption} and usage of \textbf{Certificates}.
+    \item Authentication and Non-Repudiation is provided by use of Encryption and Certificates. Execution time of asymmetric algorithm is higher than symmetric algorithm. Hence, the idea of communicating symmetric key through asymmetric encryption is commendable.
     
-    \item \textbf{Single Valued Verification} makes it lightweight and hence works faster making side-channel attacks a little harder.
+    \item Single Valued Verification makes it lightweight and hence works faster making side-channel attacks a little harder. It is always easier to verify the whole chain via just an initial value $A_0$.
     
-    \item \textbf{Permission Masks} makes it almost impossible to read logs by disguising as someone else.
+    \item Usage of permission masks makes it almost impossible to read logs by disguising as someone else, hence maintaining confidentiality of the audit logs.
+    
+    \item Hash function keep the integrity of the audit logs intact.
 \end{itemize}
 
 
 \subsubsection{Weaknesses}
 
 \begin{itemize}
-    \item Weakness: Assumption - (After $\mu$ is compromised, it eventually manages to communicate with $\tau$.)
+    \item Assuming that once $\mu$ is compromised, it eventually manages to communicate with $\tau$ in itself a weakness to this protocol. If it doesn't manages to communicate, there is no possibility for $\tau$ to know that $\mu$ is compromised.
     
-    \item Weakness: Single point of contact: $A_0$. Medium based tool.
+    \item Even though single valued verification makes it lightweight, it also induces a weakness. Single point of contact, $A_0$ makes it more vulnerable to initial attacks. Getting hold of $A_0$ will compromise the whole chain.
     
-    \item Weakness: In the event where the attacker compromises $\mu$ before computing $A_j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is a normal log entry, it is not harmful to the system, but in case of $A_{j-1}$ being the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.
+    \item In the event where the attacker compromises $\mu$ before computing $A_j$, the $t^{th}$ log entry is excluded from being secure as the attacker has knowledge of $A_{j-1}$. If $A_{j-1}$ is the log entry representing attacker's intrusion, $\tau$ will not be able to figure out if there has been a compromise.
     
     \item Attack on $\mu$ before sharing $A_0$ renders the whole process useless. It is important to develop $\mu$ with pre-shared $A_0$.
+    
+    \item Once the attacker has gained control over $\mu$, the attacker may include phony logs of intrusion at a later time, which will make $\tau$ neglect the original intrusion.
+    
+    \item Infrequent log entries can make the intrusion detection harder. It is advised to log every minute, in-order to counter the possibility of quick attack. Logging based on knob values, can be susceptible to numerous attacks.
+    
+    \item $\nu's$ compromise enables the attacker to read certain log files which $\nu$ could have easily read.
+    
 \end{itemize}
 
 \subsection{Further Improvements and Expectation}
