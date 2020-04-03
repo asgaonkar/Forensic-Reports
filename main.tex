@@ -65,15 +65,15 @@ by\\[2\baselineskip]
 \setcounter{page}{1}
 \section{Introduction}
 
-At this pace of digital advancement and rapid data generation, it is important to practice logging. Current scenario doesn't always satisfy logging in on secure machine. So in the event of log compromise, it should be impossible for the attacker to read, and almost impossible to modify without being detectable.Hence, there is a need for computationally cheap methods to able to build and maintain a file of secure audit log.
+At this pace of digital advancement and rapid data generation, it is important to practice logging. Current scenario doesn't always satisfy logging-in on secure machine. So in the event of log compromise, it should be impossible for the attacker to read and modify without being detectable. Hence, there is a need to build and maintain a file of secure audit log through computationally cheap methods.
 
 \subsection{Problem Statement}
 
-Given an untrusted\footnote{Although \textit{untrusted}, it isn't generally expected to be compromised} machine $\mu$ which is neither physically secure nor tamper resistant. \textit{\makePaperAuthors} develop a system to log on $\mu$ with minimal interaction with a trusted machine $\tau$ while guaranteeing strongest security measures. In case an attacker gains control of machine $\mu$ at time \textit{t}, the attacker shouldn't be able to read, alter or delete logs made before time \textit{t} without being detected. Hence maintaining Confidentiality, Integrity and Availability (explained in \hyperref[sec:limitation]{Section 3.3: Limitations}) of this system until time \textit{t}.\\
+Given an untrusted\footnote{Although \textit{untrusted}, it isn't generally expected to be compromised} machine $\mu$ which is neither physically secure nor tamper resistant. \textit{\makePaperAuthors} develop a system to log on $\mu$ with minimal interaction with a trusted machine $\tau$ while guaranteeing strongest security measures. In case an attacker gains control of machine $\mu$ at time \textit{t}, the attacker shouldn't be able to read, alter or delete logs made before time \textit{t} without being detected. Hence maintaining Confidentiality, Integrity and Availability of this system until time \textit{t}.\\
 
 In rare situations where owner of the device is not the same as the owner of secrets within the device, there is an urgent need to employ audit mechanism able to determine if there has been some attempted fraud. The purpose of this audit mechanism is to be able to detect any signs of manipulation, not to prevent all possible manipulation.\\
 
-Numerous applications are in need of such protocols. To give an analogy, consider an electronic wallet as the untrusted machine ($\mu$) containing its own set of instruction, code and data to work independently. Apart from its independent work, it also does communicate occasionally with its corresponding servers, which are assumed to be trusted ($\tau$). In an event of e-wallet being compromised, the servers should be notified of its compromise, so that no more traffic flows through the compromised device. Moreover the audit mechanism should be able to withstand tampering in-order to notify the servers. More applications are discussed in \hyperref[sec:application]{Section 2.3: Application}
+Numerous applications are in need of such protocols. To give an analogy, consider an electronic wallet as the untrusted machine ($\mu$) containing its own set of instruction, code and data to work independently. Apart from its independent work, it also does communicate occasionally with its corresponding servers, which are assumed to be trusted ($\tau$). In an event of e-wallet being compromised, the servers should be able to detect the compromise, so that no more traffic flows through the compromised device. Moreover the audit mechanism should be able to withstand tampering in-order to notify the servers. More applications are discussed in \hyperref[sec:application]{Section 2.3: Application}
 
 
 \section{Novel Approach}
@@ -87,15 +87,15 @@ In order to understand the methodology proposed by \textit{\makePaperAuthors}, i
 \begin{enumerate}
     \item $ID_x$ represents a unique identifier string for an entity, $x$. 
     
-    \item $PKE_{PK_x} (K)$ is the public-key encryption, using $x$’s public key.\footnote{RSA or ElGamal}
+    \item $PKE_{PK_x} (K)$ is the public-key encryption\footnote{RSA or ElGamal}, using $x$’s public key.
 
-    \item $SIGN_{SK_x}(Z)$ is the digital signature, under $x$’s private key.\footnote{RSA or DSA}
+    \item $SIGN_{SK_x}(Z)$ is the digital signature\footnote{RSA or DSA}, under $x$’s private key.
 
-    \item $E_{K_0}(X)$ is the symmetric encryption of $X$ using key $K_0$.\footnote{AES, DES, IDEA, or Blowfish}. 
+    \item $E_{K_0}(X)$ is the symmetric encryption\footnote{AES, DES, IDEA, or Blowfish} of $X$ using key $K_0$. 
 
     \item $MAC_{K_0}(X)$ is the symmetric message authentication code using key $K_0$. 
 
-    \item $hash(X)$ is the one-way hash function.\footnote{SHA-256 or SHAKE-256}
+    \item $hash(X)$ is the one-way hash function\footnote{SHA-256 or SHAKE-256}.
 
     \item $X, Y$ represents the concatenation of $X$ with $Y$. Also represented as $X || Y$
 
@@ -109,13 +109,13 @@ Understanding of different processes is incomplete without the knowledge of vari
     
     \item $\mu$ is the untrusted machine, on which the log is to be kept.
     
-    \item $\nu$ is a moderately trusted verifier, which will be trusted to review certain kinds of records on a log, but not trusted with the ability to change records. Note that $\nu$ must interact with $\tau$ in order to access these records. 
+    \item $\nu$ is a moderately trusted verifier, which will be trusted to review certain kinds of records on a log, but not trusted with the ability to change records. $\nu$ cannot access logs without interaction with $\tau$.
 \end{itemize}
 
 
 \subsection{Methodology}
 
-The working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle.\\
+Apart from the construction rules, the working of this system can be categorised into four major modules, namely Creating the logfile, Closing the logfile, Validating the logfile and Verification Entries. The foundation is governed by certain assumption, definitions and rules. It is imperative to comprehend the importance of these underlying principle.\\
 
 
 The untrusted machine $\mu$ initially shares a secret key with trusted verification machine $\tau$. Using this secret key, a logfile is created. Four major aspects of security protecting the logfile is mentioned below.
